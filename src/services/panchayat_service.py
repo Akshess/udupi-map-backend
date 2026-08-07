@@ -1,58 +1,67 @@
-﻿from src.apis.egramswaraj import client
-
-async def get_panchayat_planning(lgd_code: int, plan_year: int):
-    return await client.get_planning_data(
-        state_code=29,
-        plan_year=plan_year,
+﻿async def get_panchayat_dashboard(lgd_code: int, plan_year: int):
+    data = await get_panchayat_planning(
         lgd_code=lgd_code,
+        plan_year=plan_year,
     )
 
-async def get_panchayat_activities(lgd_code: int, plan_year: int):
-    data = await get_panchayat_planning(lgd_code=lgd_code, plan_year=plan_year)
     activities = []
+    resources = []
+    progress = []
+
     for item in data:
+
+        # Activities
         activities.append({
             "activityCd": item.get("activityCd"),
             "activityType": item.get("activityType"),
             "activityName": item.get("activityName"),
             "totalCost": item.get("totalCost"),
-            "schemeCode": (item.get("fundList") or [{}])[0].get("schemeCode"),
+            "schemeCodes": [
+                f.get("schemeCode")
+                for f in item.get("fundList", [])
+                if f.get("schemeCode") is not None
+            ],
             "activityStts": item.get("activityStts"),
         })
-    return activities
 
-async def get_panchayat_resource_envelope(lgd_code: int, plan_year: int):
-    data = await get_panchayat_planning(lgd_code=lgd_code, plan_year=plan_year)
-    resources = []
-    for item in data:
+        # Resources
         for f in item.get("fundList", []):
             resources.append({
                 "schemeCode": f.get("schemeCode"),
                 "schemeComponentCode": f.get("componentCode"),
-                "alocationAmountGen": f.get("untiedAmountGen") or f.get("tiedAmountGen") or 0,
-                "alocationAmountSc": f.get("untiedAmountSc") or f.get("tiedAmountSc") or 0,
-                "alocationAmountSt": f.get("untiedAmountSt") or f.get("tiedAmountSt") or 0,
-                "totalBudjAmount": f.get("amountTotal"),
+                "allocationAmountGen": (
+                    (f.get("untiedAmountGen") or 0)
+                    + (f.get("tiedAmountGen") or 0)
+                ),
+                "allocationAmountSc": (
+                    (f.get("untiedAmountSc") or 0)
+                    + (f.get("tiedAmountSc") or 0)
+                ),
+                "allocationAmountSt": (
+                    (f.get("untiedAmountSt") or 0)
+                    + (f.get("tiedAmountSt") or 0)
+                ),
+                "totalBudgetAmount": f.get("amountTotal"),
             })
-    return resources
 
-async def get_panchayat_physical_progress(lgd_code: int, plan_year: int):
-    data = await get_panchayat_planning(lgd_code=lgd_code, plan_year=plan_year)
-    progress = []
-    for item in data:
+        # Physical progress
         asset = item.get("assetDetails")
-        if asset:
-            astNm = asset.get("astNm") if isinstance(asset, dict) else None
-            astLocType = None
-            completed = None
-            if isinstance(asset, dict):
-                locs = asset.get("assetLocationDetails") or []
-                if locs:
-                    astLocType = str(locs[0].get("astLocCd"))
+
+        if asset and isinstance(asset, dict):
+            locations = asset.get("assetLocationDetails") or []
+
             progress.append({
                 "activityCd": item.get("activityCd"),
-                "astLocType": astLocType,
-                "astNm": astNm,
-                "completed": completed,
+                "astLocType": (
+                    str(locations[0].get("astLocCd"))
+                    if locations else None
+                ),
+                "astNm": asset.get("astNm"),
+                "completed": None,
             })
-    return progress
+
+    return {
+        "activities": activities,
+        "resources": resources,
+        "progress": progress,
+    }
