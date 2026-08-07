@@ -16,9 +16,20 @@ class EGramSwarajClient:
             f"{state_code}/{plan_year}/{lgd_code}"
         )
 
-        async with httpx.AsyncClient() as client:
+        timeout = httpx.Timeout(
+            connect=10.0,
+            read=60.0,
+            write=10.0,
+            pool=10.0,
+        )
+
+        async with httpx.AsyncClient(
+            timeout=timeout,
+            follow_redirects=True,
+        ) as client:
             response = await client.get(url)
             response.raise_for_status()
+
             return response.json()
 
 
