@@ -1,5 +1,6 @@
 import httpx
 
+
 class EGramSwarajClient:
     BASE_URL = "https://egramswaraj.gov.in/webservice"
 
@@ -9,7 +10,11 @@ class EGramSwarajClient:
         plan_year: int,
         lgd_code: int,
     ):
-        url = f"{self.BASE_URL}/getLbApprovedActivityData/{state_code}/{plan_year}/{lgd_code}"
+        url = (
+            f"{self.BASE_URL}/"
+            f"getLbApprovedActivityData/"
+            f"{state_code}/{plan_year}/{lgd_code}"
+        )
 
         async with httpx.AsyncClient() as client:
             response = await client.get(url)
