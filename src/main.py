@@ -14,13 +14,13 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# # Allow your frontend (localhost + deployed URL) to call this API
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=ALLOWED_ORIGINS,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+# Allow your frontend (localhost + deployed URL) to call this API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://go-udupi.vercel.app/"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(panchayat_router)
 
