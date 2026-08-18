@@ -1,16 +1,29 @@
-﻿from fastapi import APIRouter
+from fastapi import APIRouter
 
 from src.services.panchayat_service import (
-    get_panchayat_planning,
     get_panchayat_activities,
-    get_panchayat_resource_envelope,
+    get_panchayat_dashboard,
     get_panchayat_physical_progress,
+    get_panchayat_planning,
+    get_panchayat_resource_envelope,
 )
 
 router = APIRouter(
     prefix="/panchayats",
     tags=["Panchayats"],
 )
+
+
+@router.get("/{lgd_code}/dashboard")
+async def dashboard(
+    lgd_code: int,
+    plan_year: int,
+):
+    """Return all panchayat dashboard data from one upstream request."""
+    return await get_panchayat_dashboard(
+        lgd_code=lgd_code,
+        plan_year=plan_year,
+    )
 
 
 @router.get("/{lgd_code}/planning")
